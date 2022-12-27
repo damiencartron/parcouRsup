@@ -5,11 +5,27 @@ library(openxlsx)
 # library(xlsx)
 library(ggplot2)
 library(questionr)
-fr_esr_parcoursup <- read_delim("fr-esr-parcoursup.csv", 
+
+#Import CSV ----
+##Import Parcoursup 2021 ----
+fr_esr_parcoursup_2021 <- read_delim("fr-esr-parcoursup_2021.csv", 
                                 delim = ";", escape_double = FALSE, trim_ws = TRUE)
 
-d<- fr_esr_parcoursup
+d21<- fr_esr_parcoursup_2021
 
+## Import 2020 -------
+fr_esr_parcoursup_2020 <- read_delim("fr-esr-parcoursup_2020.csv", 
+                                     delim = ";", escape_double = FALSE, trim_ws = TRUE)
+d20<- fr_esr_parcoursup_2020
+d20 <- d20 %>% dplyr::rename(`Filière de formation détaillée bis` = `Filière de formation détaillée...14`,
+                             `Filière de formation détaillée`     = `Filière de formation détaillée...11`)
+# d20$MentionTTB <- 0
+d20$`% d’admis néo bacheliers avec mention Très Bien avec félicitations au bac` <- 0
+
+## fusiion des bases -----
+d<-bind_rows(d21,d20)
+
+## recodages ----
 d$UAI <- d$`Code UAI de l'établissement`
 d$Statut <- d$`Statut de l’établissement de la filière de formation (public, privé…)`
 d$Filiere <- d$`Filière de formation très agrégée`
@@ -41,6 +57,12 @@ d <- subset(d,select = c(Session,UAI,Etablissement,Statut,Filiere,Filierebis,Fil
                          AdmisT1, AdmisT2,AdmisT3,MentionNo,MentionAB,MentionB,MentionTB,MentionTTB,MentionTBTTB,filles,FiliereAgregee,FiliereDetaillee))
 
 
+
+
+
+
+
+#####################
 d$EtbShort <- d$Etablissement %>% #juste des noms courts pour les graphiques et même Excel
   fct_recode(
     "INSA Toulouse" = "INSA Toulouse",  
@@ -64,11 +86,14 @@ d$EtbShort <- d$Etablissement %>% #juste des noms courts pour les graphiques et 
   )
 
 
-levels(d$EtbShort)
+# levels(d$EtbShort)
 # tri des établissements par niveau de félicitations du jury ----
-d$EtbShort <- d$EtbShort %>%
-  fct_reorder2(d$MentionTTB, d$MentionTB, .desc = TRUE)
+# d$EtbShort <- d$EtbShort %>%
+#   fct_reorder2(d$MentionTTB, d$MentionTB, .desc = TRUE)
 
+d$EtbShort <- d$EtbShort %>%
+  fct_reorder2(d$MentionTB, d$MentionB, .desc = TRUE)
+# pas de félicitations dans le fichier 2020 
 
 # EXTRACTION ----
 ## extraction données MP2I ----
@@ -86,7 +111,7 @@ mesUAI <- c("0597131F","0410979S","0690192J","0690192J","0350097R","0350097R","0
             "0601223H","0601223D","0101060Y")
 
 InsaUT <- subset(d,UAI %in% mesUAI)
-InsaUT <- subset(InsaUT,FiliereDetaillee =="Bac Général" | FiliereDetaillee =="Série générale")
+InsaUT <- subset(InsaUT,FiliereDetaillee =="Bac Général" | FiliereDetaillee =="Série générale" | FiliereDetaillee= "Bac ES, L" | FiliereDetaillee= "Bac ES" | FiliereDetaillee= "Bac L")
 # View(InsaUT)
 write.xlsx(InsaUT,'InsaUT.xlsx',colNames = TRUE,firstActiveCol = 4)
 
