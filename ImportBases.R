@@ -5,6 +5,7 @@ library(openxlsx)
 # library(xlsx)
 library(ggplot2)
 library(questionr)
+library(forcats)
 
 #Import CSV ----
 ##Import Parcoursup 2021 ----
@@ -114,7 +115,7 @@ InsaUT <- subset(d,UAI %in% mesUAI)
 InsaUT <- subset(InsaUT,FiliereDetaillee =="Bac Général" | FiliereDetaillee =="Série générale" | 
                    FiliereDetaillee == "Bac ES, L" | FiliereDetaillee == "Bac ES" | 
                    FiliereDetaillee == "Bac L" | FiliereDetaillee == "Bac S")
- View(InsaUT)
+ # View(InsaUT)
 write.xlsx(InsaUT,'InsaUT.xlsx',colNames = TRUE,firstActiveCol = 4)
 
 
@@ -148,21 +149,33 @@ write.xlsx(l,"ExportTot.xlsx",firstRow = TRUE, firstActiveCol  = 1)
 
 # Fonction pour les graphiques  -----
 graphfacet <- function(ficIn, ficName, annee) {
+#   ficIn$EtbShort <- ficIn$EtbShort %>%
+#     fct_reorder2(ficIn$MentionTTB, ficIn$MentionTB, .desc = TRUE)
+#     levels(ficIn$EtbShort)
 
 #Inspiration graphiques https://larmarange.github.io/analyse-R/exemples-graphiques-avances.html 
   
   # tri des établissements par niveau de félicitations du jury ----
-  # ficIn$EtbShort <- ficIn$EtbShort %>%
-  #   fct_reorder2(ficIn$MentionTTB, ficIn$MentionTB, .desc = TRUE)
-  
+
+  # if (annee == 2021) {
+  #   ficIn$EtbShort <- ficIn$EtbShort %>%
+  #     fct_reorder2(ficIn$MentionTTB, ficIn$MentionTB, .desc = TRUE)
+  #   levels(ficIn$EtbShort)
+  # } else {
+  #   ficIn$EtbShort <- ficIn$EtbShort %>%
+  #     fct_reorder2(ficIn$MentionTB, ficIn$MentionB, .desc = TRUE)
+  #   levels(ficIn$EtbShort)
+  # }
   
   ficIn$EtbShort <- ficIn$EtbShort %>%
-    fct_reorder(ficIn$MentionTB, .desc = TRUE)
-  levels(ficIn$EtbShort)
+    fct_reorder2(ficIn$MentionTTB, ficIn$MentionTB, .desc = TRUE)
   
   ficIn$EtbShort <- ficIn$EtbShort %>%
     fct_reorder(ficIn$MentionTTB, .desc = TRUE)
   levels(ficIn$EtbShort)
+
+  
+
 
   
   write.xlsx(ficIn,paste0(ficName, ".xlsx"),colNames = TRUE)

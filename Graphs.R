@@ -1,5 +1,6 @@
 
 # En fait ici j'ai refait la fonction graphique car j'avais des problèmes dans l'introduction de l'année ; là je tente l'année en manuel 
+# finanelement le modèle chic marche pas mal sauf l'ordre des variables 
 
 # Fonction pour les graphiques  -----
 graphfacet <- function(ficIn, ficName) {
@@ -73,10 +74,10 @@ graphfacet <- function(ficIn, ficName) {
   maliste <- list(mongraph,mesbarres)
   return(maliste)
 }
-graphfacet(InsaUT21, "Insa & UT")
 
 
 ## graphiques pour les Insa & UT -----
 InsaUT20 <- subset(InsaUT, Session ==2020)
 InsaUT21 <- subset(InsaUT, Session ==2021)
 graphfacet(InsaUT20, "Insa & UT")
+graphfacet(InsaUT21, "Insa & UT")
