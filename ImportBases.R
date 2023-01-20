@@ -224,6 +224,21 @@ monratio
 ggsave(paste0(ficName, "_RatioLC.png"),device = "png",
        height =  8.25, width = 11.75)
 
+## Graphique taux d'accès ---- 
+histo <- subset(InsaUT, select = c(EtbShort,Session,TxAccess))
+histo <- pivot_longer(histo, TxAccess)
+histo <- histo %>% dplyr::rename(TxAccess = name,  Repartition =value)
+
+montxaccess <- ggplot(data=histo, aes(x=floor(Session), y=Repartition, label = Repartition)) +
+  geom_line(stat = "identity", position = "identity")+
+  geom_point()+
+  geom_text(nudge_y = 2)+
+  labs(x="Année", y="Taux d'accès", title = "Evolution du taux d'accès", subtitle = paste0(ficName, " - session ", annee))+
+  facet_wrap(~EtbShort)
+
+montxaccess 
+ggsave(paste0(ficName, "_TxAccess.png"),device = "png",
+       height =  8.25, width = 11.75)
 ## Subset année et tri de la base ----
 ficIn <- subset(ficIn, Session == annee)
   
@@ -283,7 +298,7 @@ ficIn$EtbShort <- ficIn$EtbShort %>%
          height =  8.25, width = 11.75)
   
   
-  maliste <- list(monratio,mongraph,mesbarres)
+  maliste <- list(monratio,montxaccess,mongraph,mesbarres)
   return(maliste)
 }
 
