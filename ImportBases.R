@@ -211,16 +211,16 @@ histo <- subset(ficIn, select = c(EtbShort,Session,LCvsCapacite))
 histo <- pivot_longer(histo, LCvsCapacite)
 histo <- histo %>% dplyr::rename(LCvsCapacite = name,  Repartition =value)
 
-mongraph <- ggplot(data=histo, aes(x=floor(Session), y=Repartition, label = Repartition)) +
+monratio <- ggplot(data=histo, aes(x=floor(Session), y=Repartition, label = Repartition)) +
   geom_line(stat = "identity", position = "identity")+
   geom_point()+
   geom_text(nudge_y = 2)+
-  labs(title = "Ratio dernier pris sur taille promo", subtitle = paste0(ficName, " - session ", annee))+
+  labs(x="Année", y="NbPlaces/Dernier entré", title = "Ratio dernier pris sur taille promo", subtitle = paste0(ficName, " - session ", annee))+
   #xlim(2020,2022)+
   facet_wrap(~EtbShort)
 # bon à savoir :   facet_wrap(~EtbShort, scales="free") permet d'avoir des échelles différentes 
 
-mongraph 
+monratio 
 ggsave(paste0(ficName, "_RatioLC.png"),device = "png",
        height =  8.25, width = 11.75)
 
@@ -283,7 +283,7 @@ ficIn$EtbShort <- ficIn$EtbShort %>%
          height =  8.25, width = 11.75)
   
   
-  maliste <- list(mongraph,mesbarres)
+  maliste <- list(monratio,mongraph,mesbarres)
   return(maliste)
 }
 
