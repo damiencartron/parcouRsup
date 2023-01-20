@@ -90,6 +90,7 @@ d$EtbShort <- d$Etablissement %>% #juste des noms courts pour les graphiques et 
     "INSA Stbg" = "INSA Strasbourg",
     "INSA Rouen" = "INSA Rouen Normandie",
     "INSA Nord" = "INSA (Institut National des Sciences Appliquées) Hauts de France de VALENCIENNES",
+    "INSA Nord" = "INSA Hauts-de-France (Valenciennes)",
     "UTT" = "UTT Université de Technologie de Troyes",
     "INSA Centre" = "INSA Centre Val de Loire",
     "INSA Rennes"="INSA Rennes",
@@ -155,10 +156,13 @@ EInge <- subset(d,UAI %in% mesUAI)
 EInge <- subset(EInge, UAI == "0932019P" & FiliereAgregee == "Ecole d'Ingénieur" & FiliereDetaillee == "Bacs généraux")
 
 ##Extraction des écoles Puissance Alpha ---- 
-PAlpha <- subset(d, Concours == "Concours Puissance Alpha - Formation d'ingénieur Bac + 5 - Bacs généraux" &
-                   Filiere == "Ecole d'Ingénieur" &
-                   FiliereDetaillee == "Bacs généraux" &
-                   FiliereAgregee == "Ecole d'Ingénieur")
+PAlpha <- subset(d, Concours == "Concours Puissance Alpha - Formation d'ingénieur Bac + 5 - Bacs généraux" | 
+                   Concours == "Concours Puissance Alpha - Formation d'ingénieur Bac + 5 - Bacs généraux - 2 Sciences" &
+                   (Filiere == "Ecole d'Ingénieur" &
+                   (FiliereDetaillee == "Bacs généraux" | FiliereDetaillee =="Bacs généraux - 2 Sciences") &
+                   FiliereAgregee == "Ecole d'Ingénieur"))
+
+# Concours Puissance Alpha - Formation d'ingénieur Bac + 5 - Bacs généraux - 2 Sciences
 
 ## Extraction des Concours Avenir -----
 mesUAI <- c("0922563L","0762378X")
@@ -212,25 +216,27 @@ graphfacet <- function(ficIn, ficName, annee) {
   #   levels(ficIn$EtbShort)
   # }
   
+
+  
+  write.xlsx(ficIn,paste0(ficName, ".xlsx"),colNames = TRUE)
+  write.xlsx(subset(ficIn,Session==2022),paste0(ficName, "_2022.xlsx"),colNames = TRUE)
+  write.xlsx(subset(ficIn,Session==2021),paste0(ficName, "_2021.xlsx"),colNames = TRUE)
+  write.xlsx(subset(ficIn,Session==2020),paste0(ficName, "_2020.xlsx"),colNames = TRUE)
+  
+  ficIn <- subset(ficIn, Session == annee)
+  
   ficIn$EtbShort <- ficIn$EtbShort %>%
     fct_reorder2(ficIn$MentionTTB, ficIn$MentionTB, .desc = TRUE)
   
   ficIn$EtbShort <- ficIn$EtbShort %>%
     fct_reorder(ficIn$MentionTTB, .desc = TRUE)
   levels(ficIn$EtbShort)
-
   
-
-
-  
-  write.xlsx(ficIn,paste0(ficName, ".xlsx"),colNames = TRUE)
-  write.xlsx(subset(ficIn,Session==2021),paste0(ficName, "_2021.xlsx"),colNames = TRUE)
-  write.xlsx(subset(ficIn,Session==2020),paste0(ficName, "_2020.xlsx"),colNames = TRUE)
   
   # l <- list( "Tout" = ficName, paste0(ficName, "_2021") = subset(ficIn,Session==2021), paste0(ficName, "_2020") = subset(ficIn,Session==2020)) 
   # write.xlsx(l,paste0(ficName, ".xlsx"),firstRow = TRUE, firstActiveCol  = 1)
   
-  ficIn <- subset(ficIn, Session == annee)
+
   
   histo <- subset(ficIn, select = c(EtbShort,Session,MentionNo,MentionAB,MentionB,MentionTB, MentionTTB))
   histo <- pivot_longer(histo, c(MentionNo,MentionAB,MentionB,MentionTB,MentionTTB))
@@ -249,10 +255,10 @@ graphfacet <- function(ficIn, ficName, annee) {
     facet_wrap(~EtbShort)+
     geom_col()+
     theme(legend.position = "bottom")+
-    labs(x="",y="Distribution", fill = "", title="Répartition des admis par mention au bac", subtitle = ficName)
+    labs(x="",y="Distribution", fill = "", title="Répartition des admis par mention au bac", subtitle = paste0(ficName, " - session ", annee))
   
 
-  ggsave(paste0(ficName, "_Facet.png"),device = "png",
+  ggsave(paste0(ficName, "_Facet_",annee,".png"),device = "png",
          height =  8.25, width = 11.75)
   
   f <- function(x) {
@@ -292,7 +298,8 @@ graphfacet(MP2Is, "MP2I", 2022)
 
 ## graphiques pour les prépas MPSI -----
 graphfacet(MPSI, "MPSI",2021)
-# ggsave("MPSI.png")
+graphfacet(MPSI, "MPSI",2022)
+
 
 ## graphiques pour le concours Avenir  -----
 graphfacet(Avenir, "Concours Avenir", 2020)
@@ -300,18 +307,19 @@ graphfacet(Avenir, "Concours Avenir", 2021)
 graphfacet(Avenir, "Concours Avenir", 2022)
 
 ## graphiques Prépas AL ---
-## graphiques pour le concours Avenir  -----
 graphfacet(AL, "Prépas AL", 2020)
 graphfacet(AL, "Prépas AL", 2021)
+graphfacet(AL, "Prépas AL", 2022)
 
 
 ## Graphiques pour Puissance Alpha ----
 graphfacet(PAlpha,"PuissanceAlpha",2020)
 graphfacet(PAlpha,"PuissanceAlpha",2021)
 graphfacet(PAlpha,"PuissanceAlpha",2022)
-# ggsave("PAlpha.png")
 
 ## graphiques pour  les formations pré-sélectionnées ----
+graphfacet(Selec, "Selection",2020)
+graphfacet(Selec, "Selection",2021)
 graphfacet(Selec, "Selection",2022)
 # ggsave("Selec.png")
 
