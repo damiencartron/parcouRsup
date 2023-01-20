@@ -198,37 +198,39 @@ write.xlsx(l,"ExportTot.xlsx",firstRow = TRUE, firstActiveCol  = 1)
 
 # Fonction pour les graphiques  -----
 graphfacet <- function(ficIn, ficName, annee) {
-#   ficIn$EtbShort <- ficIn$EtbShort %>%
-#     fct_reorder2(ficIn$MentionTTB, ficIn$MentionTB, .desc = TRUE)
-#     levels(ficIn$EtbShort)
 
-#Inspiration graphiques https://larmarange.github.io/analyse-R/exemples-graphiques-avances.html 
-  
-  # tri des établissements par niveau de félicitations du jury ----
+## Ecriture des fichiers excel de sortie ----
+write.xlsx(ficIn,paste0(ficName, ".xlsx"),colNames = TRUE)
+write.xlsx(subset(ficIn,Session==2022),paste0(ficName, "_2022.xlsx"),colNames = TRUE)
+write.xlsx(subset(ficIn,Session==2021),paste0(ficName, "_2021.xlsx"),colNames = TRUE)
+write.xlsx(subset(ficIn,Session==2020),paste0(ficName, "_2020.xlsx"),colNames = TRUE)
 
-  # if (annee == 2021) {
-  #   ficIn$EtbShort <- ficIn$EtbShort %>%
-  #     fct_reorder2(ficIn$MentionTTB, ficIn$MentionTB, .desc = TRUE)
-  #   levels(ficIn$EtbShort)
-  # } else {
-  #   ficIn$EtbShort <- ficIn$EtbShort %>%
-  #     fct_reorder2(ficIn$MentionTB, ficIn$MentionB, .desc = TRUE)
-  #   levels(ficIn$EtbShort)
-  # }
-  
+## Graphique Ratio liste d'attente 
 
+histo <- subset(ficIn, select = c(EtbShort,Session,LCvsCapacite))
+histo <- pivot_longer(histo, LCvsCapacite)
+histo <- histo %>% dplyr::rename(LCvsCapacite = name,  Repartition =value)
+
+mongraph <- ggplot(data=histo, aes(x=floor(Session), y=Repartition, label = Repartition)) +
+  geom_line(stat = "identity", position = "identity")+
+  geom_point()+
+  geom_text(nudge_y = 2)+
+  labs(title = "Ratio dernier pris sur taille promo", subtitle = paste0(ficName, " - session ", annee))+
+  #xlim(2020,2022)+
+  facet_wrap(~EtbShort)
+# bon à savoir :   facet_wrap(~EtbShort, scales="free") permet d'avoir des échelles différentes 
+
+mongraph 
+ggsave(paste0(ficName, "_RatioLC.png"),device = "png",
+       height =  8.25, width = 11.75)
+
+## Subset année et tri de la base ----
+ficIn <- subset(ficIn, Session == annee)
   
-  write.xlsx(ficIn,paste0(ficName, ".xlsx"),colNames = TRUE)
-  write.xlsx(subset(ficIn,Session==2022),paste0(ficName, "_2022.xlsx"),colNames = TRUE)
-  write.xlsx(subset(ficIn,Session==2021),paste0(ficName, "_2021.xlsx"),colNames = TRUE)
-  write.xlsx(subset(ficIn,Session==2020),paste0(ficName, "_2020.xlsx"),colNames = TRUE)
-  
-  ficIn <- subset(ficIn, Session == annee)
-  
-  ficIn$EtbShort <- ficIn$EtbShort %>%
+ficIn$EtbShort <- ficIn$EtbShort %>%
     fct_reorder2(ficIn$MentionTTB, ficIn$MentionTB, .desc = TRUE)
   
-  ficIn$EtbShort <- ficIn$EtbShort %>%
+ficIn$EtbShort <- ficIn$EtbShort %>%
     fct_reorder(ficIn$MentionTTB, .desc = TRUE)
   levels(ficIn$EtbShort)
   
