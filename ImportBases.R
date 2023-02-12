@@ -6,6 +6,9 @@ library(openxlsx)
 library(ggplot2)
 library(questionr)
 library(forcats)
+library(knitr)
+library(kableExtra)
+
 
 #Import CSV ----
 ##Import Parcoursup 2022 ----
@@ -60,6 +63,14 @@ d$MentionB  <- round(d$`% d’admis néo bacheliers avec mention Bien au bac`,0)
 d$MentionTB <- round(d$`% d’admis néo bacheliers avec mention Très Bien au bac`,0)
 d$MentionTTB <- round(d$`% d’admis néo bacheliers avec mention Très Bien avec félicitations au bac`,0)
 d$MentionTBTTB <- round(d$`% d’admis néo bacheliers avec mention Très Bien au bac`+ d$`% d’admis néo bacheliers avec mention Très Bien avec félicitations au bac`,0)
+
+d$NbMentionNo <- d$`Dont effectif des admis néo bacheliers sans mention au bac`
+d$NbMentionAB <- d$`Dont effectif des admis néo bacheliers avec mention Assez Bien au bac`
+d$NbMentionB <- d$`Dont effectif des admis néo bacheliers avec mention Bien au bac`
+d$NbMentionTB <- d$`Dont effectif des admis néo bacheliers avec mention Très Bien au bac`
+d$NbMentionTTB <- d$`Dont effectif des admis néo bacheliers avec mention Très Bien avec félicitations au bac`
+d$NbMentionTBTTB <- d$NbMentionTB+d$NbMentionTTB
+d$NbCandidatCalcule <- d$NbMentionNo+d$NbMentionAB+d$NbMentionB+d$NbMentionTBTTB
 d$Etablissement <- d$Établissement
 d$filles <- round(d$`% d’admis dont filles`,0)
 d$Capacite <- d$`Capacité de l’établissement par formation`
@@ -69,15 +80,6 @@ d$LastCalled <-d$`Effectif total des candidats ayant reçu une proposition d’a
 d$TailleLC <- d$LastCalled - d$Capacite
 d$LCvsCapacite <- round(d$TailleLC / d$Capacite, 1)
 d$TxAccess <- round(d$LastCalled / d$NbCandidats,3)*100
-
-d <- subset(d,select = c(Session,UAI,Etablissement,Statut,Filiere,Filierebis,FiliereDetaillee, Concours,
-                         Capacite,NbCandidats,NbClasse,LastCalled,TailleLC,LCvsCapacite, TxAccess,
-                         AdmisT1, AdmisT2,AdmisT3,MentionNo,MentionAB,MentionB,MentionTB,MentionTTB,MentionTBTTB,filles,FiliereAgregee,FiliereDetaillee))
-
-
-
-
-
 
 
 #####################
@@ -112,9 +114,40 @@ d$EtbShort <- d$Etablissement %>% #juste des noms courts pour les graphiques et 
     "Berthelot" = "Lycée Marcelin Berthelot",
     "ChateauB" = "Lycée Francois René De Chateaubriand",
     "H4" = "Lycée Henri IV",
-    "Ste Marie" = "Lycée Sainte-Marie de Neuilly"
-    
-  )
+    "Ste Marie" = "Lycée Sainte-Marie de Neuilly",
+    "Isen Ouest" = "ISEN Yncrea Ouest Caen",
+    "Isen Med" = "ISEN Méditerranée",
+    "ESEO Paris" = "ESEO Paris - Vélizy",
+    "ESIEE" = "ESIEE Paris",
+    "ESIAP" = "ESAIP Aix-en-Provence",
+    "Montpellier" = "Polytech Montpellier", 
+    "Angers" = "Polytech Angers", 
+    "Lille" = "Polytech Lille", 
+    "Sorbonne" = "Polytech Sorbonne", 
+    "Lille" = "Polytech Lille", 
+    "Clermont" = "Polytech Clermont", 
+    "Nice Sophia" = "Polytech Nice Sophia", 
+    "Paris-Saclay" = "Polytech Paris-Saclay", 
+    "Sorbonne" = "Polytech Sorbonne", 
+    "Clermont" = "Polytech Clermont", 
+    "Nancy" = "Polytech Nancy", 
+    "Angers" = "Polytech Angers", 
+    "Annecy-Chambéry" = "Polytech Annecy-Chambéry", 
+    "Grenoble" = "Polytech Grenoble", 
+    "Marseille" = "Polytech Marseille", 
+    "Montpellier" = "Polytech Montpellier", 
+    "Nantes" = "Polytech Nantes", 
+    "Orléans" = "Polytech Orléans", 
+    "Tours" = "Polytech Tours", 
+    "Lyon" = "Polytech Lyon" 
+      )
+
+
+dep <- d 
+d <- subset(d,select = c(Session,UAI,Etablissement,EtbShort,Statut,Filiere,Filierebis,FiliereDetaillee, Concours,
+                         Capacite,NbCandidats,NbClasse,LastCalled,TailleLC,LCvsCapacite, TxAccess,
+                         AdmisT1, AdmisT2,AdmisT3,MentionNo,MentionAB,MentionB,MentionTB,MentionTTB,MentionTBTTB,filles,FiliereAgregee,FiliereDetaillee,
+                         NbMentionNo,NbMentionAB,NbMentionB,NbMentionTB,NbMentionTTB,NbCandidatCalcule))
 
 
 # levels(d$EtbShort)
@@ -138,9 +171,9 @@ MP2Is <- subset(MP2I,UAI %in% mesUAI)
 #View(MP2Is)
 
 ## extraction des Insa et UT ----
-mesUAI <- c("0597131F","0410979S","0690192J","0690192J","0350097R","0350097R","0350097R","0760165S","0670190T","0310152X","0310152X","0310152X",
+mesUAI <- c("0597131F","0690192J","0690192J","0350097R","0350097R","0350097R","0760165S","0310152X","0310152X","0310152X",
             "0601223H","0601223D","0101060Y","0922563L")
-
+# je vire les Insa sans informatique (Val de loire, Strasbourg) "0410979S", "0670190T",
 InsaUT <- subset(d,UAI %in% mesUAI)
 InsaUT <- subset(InsaUT,FiliereDetaillee =="Bac Général" | FiliereDetaillee =="Série générale" | 
                    FiliereDetaillee == "Bac ES, L" | FiliereDetaillee == "Bac ES" | 
@@ -175,9 +208,31 @@ Avenir <- subset(Avenir,FiliereDetaillee =="Bac Général" | FiliereDetaillee ==
 # View(Avenir)
 
 
+## Extraction des Polytech
+# Les Polytech 
+mesUAI <- c("0341143H","0492226D","0596610P","0754400A","0596610P","0631383L","0061661Y","0911986P","0754400A","0631383L","0540130Y","0492226D","0741510P","0382881A","0133682G","0341143H",
+            "0442409E","0451638L","0371610Z","0693550J")
+Polytech <- subset(d,UAI %in% mesUAI)
+# en fait les doublons sont l'option bio ; il suffit de supprimer les moins de 50 places si je veux aller vite
+
+# Angers : 94 + 32 places « BIO »
+# Annecy-Chambéry : 115
+# Clermont : 115 + 35 « BIO »
+# Grenoble : 135
+# Lille : 145 + 25 « BIO »
+# Lyon : 120
+# Marseille : 180
+# Montpellier : 180 + 25 « BIO »
+# Nancy : 144
+# Nantes : 144
+# Nice Sophia : 120
+# Orléans : 180
+# Paris-Saclay : 135
+# Sorbonne : 145 + 30 « BIO »
+# Tours : 150
 
 ## Extraction des MPSI -----
-mesUAI <- c("0783053V","0690026D","0750655E","0750658H","0590119J","0753840S","0750654D","0782562L","0750699C")
+mesUAI <- c("0940120V","0783053V","0690026D","0750655E","0750658H","0590119J","0753840S","0750654D","0782562L","0750699C")
 MPSI <- subset(d,UAI %in% mesUAI & Filierebis =="MPSI")
 
 ## Extraction des Prépa littéraires AL -----
@@ -302,53 +357,5 @@ ficIn$EtbShort <- ficIn$EtbShort %>%
   return(maliste)
 }
 
-## graphiques pour les Insa & UT -----
-graphfacet(InsaUT, "Insa & UT", 2020)
-graphfacet(InsaUT, "Insa & UT", 2021)
-graphfacet(InsaUT, "Insa & UT", 2022)
 
 
-## graphiques pour les prépas MP2I -----
-graphfacet(MP2Is, "MP2I", 2020)
-graphfacet(MP2Is, "MP2I", 2021)
-graphfacet(MP2Is, "MP2I", 2022)
-
-## graphiques pour les prépas MPSI -----
-graphfacet(MPSI, "MPSI",2021)
-graphfacet(MPSI, "MPSI",2022)
-
-
-## graphiques pour le concours Avenir  -----
-graphfacet(Avenir, "Concours Avenir", 2020)
-graphfacet(Avenir, "Concours Avenir", 2021)
-graphfacet(Avenir, "Concours Avenir", 2022)
-
-## graphiques Prépas AL ---
-graphfacet(AL, "Prépas AL", 2020)
-graphfacet(AL, "Prépas AL", 2021)
-graphfacet(AL, "Prépas AL", 2022)
-
-
-## Graphiques pour Puissance Alpha ----
-graphfacet(PAlpha,"PuissanceAlpha",2020)
-graphfacet(PAlpha,"PuissanceAlpha",2021)
-graphfacet(PAlpha,"PuissanceAlpha",2022)
-
-## graphiques pour  les formations pré-sélectionnées ----
-graphfacet(Selec, "Selection",2020)
-graphfacet(Selec, "Selection",2021)
-graphfacet(Selec, "Selection",2022)
-# ggsave("Selec.png")
-
-## graphiques pour toutes les formations ----
-graphfacet(Tout, "Toutes")
-# ggsave("PAlpha.png")
-
-
-
-
-# graphique qui fait un sous thème avec la moyenne mais en effectif 
-# ggplot(histo, aes(x = Mention, y=Repartition))+geom_bar(stat = 'identity', width = 1)+facet_wrap(~Etablissement)+
-#   labs(x = "Mentions",y="Pourcentage", title="Répartition des admis par mention")+
-#   scale_color_ipsum()+theme_ipsum_rc()+
-#   gghighlight()
