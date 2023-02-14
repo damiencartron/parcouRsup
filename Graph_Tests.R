@@ -37,7 +37,7 @@ ggplot(data=df, aes(x=dose, y=len)) +
   geom_point()
 
 ############################ TEST ki marche le mieux  ######################
-ggplot(data=histo, aes(x=floor(Session), y=Repartition, label = Repartition)) +
+ggplot(data=histo, aes(x=Session, y=Repartition, label = Repartition)) +
   geom_line(stat = "identity", position = "identity")+
   geom_point()+
   geom_text(nudge_y = 2)+
@@ -45,6 +45,18 @@ ggplot(data=histo, aes(x=floor(Session), y=Repartition, label = Repartition)) +
   xlim(2020,2022)+
   facet_wrap(~EtbShort, scales="free")
 # bon à savoir :   facet_wrap(~EtbShort, scales="free") permet d'avoir des échelles différentes 
+
+
+ggplot(data=histo, aes(x=Session, y=Repartition, label = Repartition)) +
+  geom_line(stat = "identity", position = "identity")+
+  geom_point()+
+  geom_text(nudge_y = 2)+
+  ggtitle(" Ratio Dernier pris sur taille promo")+
+  xlim(2020,2022)+
+  facet_wrap(~EtbShort, scales="free")
+
+
+
 ############################ FIN TEST ######################
 ggplot(data=histo, aes(x=Session, y=LCvsCapacite)) +
   geom_line()+
