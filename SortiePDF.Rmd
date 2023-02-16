@@ -7,16 +7,22 @@ geometry: a4paper,top=2cm,bottom=2cm,left=1.5cm,right=1.5cm
 output:
   pdf_document:
     keep_tex: yes
-date: "2023-02-12"
+date: "2023-02-13"
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
+#Echo = TRUE permet de visualiser le code dans la sortie
 ```
-## Insa et Universités technologiques 
+```{r, results="hide", include = FALSE}
+source("ImportBases.R", encoding = "UTF-8")
+library(knitr)
+# ici j'importe toutes les bases dont je vais avoir besoin ; je coupe les sorties pour éviter le bruit sur la sortie
+```
+
+# Insa et Universités technologiques 
 ```{r}
 
-source("ImportBases.R", encoding = "UTF-8")
 graphfacet(InsaUT, "Insa & UT", 2022)
 ```
 
@@ -29,13 +35,14 @@ extrait$TxClasse <- round((extrait$NbClasse / extrait$NbCandidats)*100,1)
 #   kable(format = "latex")
 extrait <- extrait %>%
   arrange((TxAccess))
-head(extrait)
+
+kable(head(extrait))
 ```
 
 Où on voit que même sur les filières avec moins de félicitations, les taux d'accès restent assez bas ; autour de 1 sur 6. Maintenant on n'a pas le niveau des postulants. 
 Les formations font le choix de classer (hormis Hu-Tech) énormément de candidats au cas où. Même l'UTC classe plus de la moitié de ses candidats. Autrement dit très peu de candidats sont éjectés dès l'alogoritme, mais beaucoup ne seront pas pris. 
 
-## Les prépas MP2I
+# Les prépas MP2I
 ```{r}
 ## extraction données MP2I ----
 MP2Is <- subset(MP2Is,UAI !="0690026D")
@@ -51,7 +58,7 @@ extrait$TxClasse <- round((extrait$NbClasse / extrait$NbCandidats)*100,1)
 #   kable(format = "latex")
 extrait <- extrait %>%
   arrange((TxAccess)) #ici je trie par niveau de TxAccess ; pour inverser desc l'ordre de tri
-head(extrait)
+kable(head(extrait))
 
 # Calcul de l'évolution du tx de Mention TTB 
 EvolMention <- subset(MP2Is,select=c(EtbShort, Session, MentionTTB))
@@ -60,10 +67,10 @@ EvolMention <- EvolMention %>% dplyr::rename(MentionTTB22 = '2022', MentionTTB21
 EvolMention$EvolTTB <- EvolMention$MentionTTB22-EvolMention$MentionTTB21
 EvolMention <- subset(EvolMention,select = c(EtbShort,MentionTTB21,MentionTTB22,EvolTTB))
 EvolMention <- EvolMention %>%arrange(desc(MentionTTB22))
-head(EvolMention)
+kable(head(EvolMention))
 ```
 Où on voit que la progression n'est pas uniforme sur cette prépa qui n'a que deux années d'existence. L'évolution de LLG (+21points) et de St Louis (-10 points) sont vraiment étonnantes ; Hoche est également très forte (+8 points). 
-Pour mémoire ces même prépas en MPSI ont 
+Pour mémoire ces même prépas en MPSI ont ce profil de mention TTB : 
 ```{r}
 # Création d'une base MPSI comparable à MP2I 
 
@@ -77,7 +84,7 @@ EvolMention <- EvolMention %>% dplyr::rename(MentionTTB22 = '2022', MentionTTB21
 EvolMention$EvolTTB <- EvolMention$MentionTTB22-EvolMention$MentionTTB21
 EvolMention <- subset(EvolMention,select = c(EtbShort,MentionTTB21,MentionTTB22,EvolTTB))
 EvolMention <- EvolMention %>%arrange(desc(MentionTTB22))
-head(EvolMention)
+kable(head(EvolMention))
 
 ```
 Où on voit que Hoche monte en flèche pour les MPSI (faut dire qu'ils communiquent très bien et donnent envie d'y aller). LLG et Faidherbe ont une augmentation qu'il faudrait pouvoir comparer à l'évolution des mentions TTB 
@@ -104,7 +111,7 @@ PAt <- subset(PA, Session == "2022",
   select = c(EtbShort,NbMentionNo,NbMentionAB,NbMentionB,NbMentionTB,NbMentionTTB,NbCandidatCalcule))
   
 write.xlsx(PAt,"Test PA.xlsx",colNames = TRUE)
-PAt
+# PAt
 # PAt$tot <- sum(PAt$NbCandidatCalcule)
 PAt2 <- PAt
 PAt2$NbMentionNo <- sum(PAt$NbMentionNo)
@@ -113,14 +120,14 @@ PAt2$NbMentionB <- sum(PAt$NbMentionB)
 PAt2$NbMentionTB <- sum(PAt$NbMentionTB)
 PAt2$NbMentionTTB <- sum(PAt$NbMentionTTB)
 PAt2$NbCandidatCalcule <- sum(PAt$NbCandidatCalcule)
-PAt2
+# PAt2
 # il va falloir faire les sommes des colonnes par écoles et supprimer les doublons
 Pat3 <- PAt
 Pat3 <- Pat3 %>%
   group_by(EtbShort) %>%
   dplyr::summarize(sum(NbMentionNo),sum(NbMentionAB),sum(NbMentionB),sum(NbMentionTB),sum(NbMentionTTB),sum(NbCandidatCalcule))
   
-Pat3
+# Pat3
 Pat3 <- Pat3 %>%
   dplyr::rename(NbMentionNo = `sum(NbMentionNo)`,
                 NbMentionAB = `sum(NbMentionAB)`,
@@ -128,7 +135,7 @@ Pat3 <- Pat3 %>%
                 NbMentionTB = `sum(NbMentionTB)`,
                 NbMentionTTB = `sum(NbMentionTTB)`,
                 NbCandidatCalcule = `sum(NbCandidatCalcule)`)
-Pat3
+# Pat3
 Pat3$MentionNo <- round(Pat3$NbMentionNo/Pat3$NbCandidatCalcule*100,0)
 Pat3$MentionAB <- round(Pat3$NbMentionAB/Pat3$NbCandidatCalcule*100,0)
 Pat3$MentionB <- round(Pat3$NbMentionB/Pat3$NbCandidatCalcule*100,0)
@@ -169,28 +176,33 @@ mesbarres <- ggplot(histo)+
   theme(legend.position = "bottom") + 
   geom_text(stat = "identity", position = position_fill(.5),
             colour = "white", fontface = "bold", size = 3.5) +
-  labs(x="",y="Distribution", fill = "",title="Répartition des admis par mention au bac", subtitle = "session 2022")
+  labs(x="",y="Distribution", fill = "",title="Répartition des admis par mention au bac", subtitle = "session 2022") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 mesbarres
 ggsave("PuissanceAlpha_bars_2022.png",device = "png",
        height =  8.25, width = 11.75)
 
 ```
 J'ai été obligé de calculer des moyennes pondérées pour les mentions car pour une raison que j'ignore mais qui semble liée à une dissimulation de la phase complémentaire j'ai dû recalculer les moyennes pondérées des mentions au bac de la plupart des écoles qui avaient trois voire quatre lignes pour le même concours. 
-Au final les meilleures des écoles de Puissance Alpha (en ayant conservé que les écoles avec numérique) sont : 
-- CPE Lyon (pas classé étudiant !)
-- ESIEA Laval (60/111)
-- EFREI Paris (62/111)
-- EBI (44/111)
-- ISEN Nantes, Brest  (52/111) ou Méditérrannée (29/111)
-- ISEP Paris (58/111)
-- et enfin ESSIEE (9% seulement de TB ; 46% de bien mais au final très bien classé étudiant : 65/111)
-- on pourrait voir si on descend jusqu'à 3IL (mais Limoges et très mal classé par l'étudiant 41/111)
+Au final les meilleures des écoles de Puissance Alpha (en ayant conservé que les écoles avec numérique) sont :
+
+* CPE Lyon (pas classé étudiant !)
+* ESIEA Laval (60/111)
+* EFREI Paris (62/111)
+* EBI (44/111)
+* ISEN Nantes, Brest  (52/111) ou Méditérrannée (29/111)
+* ISEP Paris (58/111)
+* et enfin ESSIEE (9% seulement de TB ; 46% de bien mais au final très bien classé étudiant : 65/111)
+* on pourrait voir si on descend jusqu'à 3IL (mais Limoges et très mal classé par l'étudiant 41/111)
 
 # Les Polytech 
-mesUAI <- c("0341143H","0492226D","0596610P","0754400A","0596610P","0631383L","0061661Y","0911986P","0754400A","0631383L","0540130Y","0492226D","0741510P","0382881A","0133682G","0341143H","0442409E","0451638L","0371610Z",
-"0693550J")
+*Attention, j'ai arbitrairement supprimé les formations Polytechs qui ont moins de 40 étudiants car ce sont, pour 2022 au moins (pas vérifié les autres années), des formations spécifiques Bio (mais qui portent le même nom que la formation normale et on ne peut pas les repérer sinon). Il est possible qu'en fait j'ai surinterprété puissance Alpha et que ce soit un problème du même genre (mais là c'était clairement deux lignes pour qqs polytech seulement du type Anger, Clermont et Sorbonne)*
+```{r}
+graphfacet(Polytech, "Polytech", 2022)
+```
+Où on voit qu'en fait les polytechs ont plutôt un niveau de recrutement supérieur à celui de Puissance Alpha (sans doute un effet de la gratuité des études). Ils ont certes bcp moins de mentions TTB que l'Insa ou les MP2I mais peuvent être en fait l'entre deux que je cherche depuis un moment entre Puissance Alpha et l'Insa ou l'UTC. Grenoble est un peu en dessous (mais en fait pas très loin de Saclay) et dans une ville universitaire dynamique ; donc ça vaut le coup de regarder leur maquette. 
+Les Polytechs de Lille, Sorbonne, Nice, Saclay (limite) et Lyon ont plus de 50% de memntion très bien et quasiment pas de mention AB dans leurs élèves. Il faut regarder leur site web pour voir le contenu de la formation et s'inscrire au concours. Essayer de trouver des JPO mais c'est un peu tard. 
+
 
 ## A faire
-regarder les polytechs 
-choisir les puissance alpha 
 regarder les avenir 

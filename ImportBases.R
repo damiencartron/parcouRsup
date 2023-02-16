@@ -8,6 +8,13 @@ library(questionr)
 library(forcats)
 library(knitr)
 library(kableExtra)
+library(rmarkdown)
+library(markdown)
+
+# A FAIRE ----
+# -	Si tu veux appliquer le DRY/DRO principle (don’t repeat yourself, don’t repeat others), il faut inclure dans le code la commande qui va télécharger les données sur le site. 
+# download.file("https://data.enseignementsup-recherche.gouv.fr/api/explore/v2.1/catalog/datasets/fr-esr-parcoursup/exports/csv?lang=fr&timezone=Europe%2FBerlin&use_labels=true&delimiter=%3B", "chemin/nomQueTuDonnes.csv")
+
 
 
 #Import CSV ----
@@ -126,13 +133,13 @@ d$EtbShort <- d$Etablissement %>% #juste des noms courts pour les graphiques et 
     "Sorbonne" = "Polytech Sorbonne", 
     "Lille" = "Polytech Lille", 
     "Clermont" = "Polytech Clermont", 
-    "Nice Sophia" = "Polytech Nice Sophia", 
-    "Paris-Saclay" = "Polytech Paris-Saclay", 
+    "Nice" = "Polytech Nice Sophia", 
+    "Saclay" = "Polytech Paris-Saclay", 
     "Sorbonne" = "Polytech Sorbonne", 
     "Clermont" = "Polytech Clermont", 
     "Nancy" = "Polytech Nancy", 
     "Angers" = "Polytech Angers", 
-    "Annecy-Chambéry" = "Polytech Annecy-Chambéry", 
+    "Annecy" = "Polytech Annecy-Chambéry", 
     "Grenoble" = "Polytech Grenoble", 
     "Marseille" = "Polytech Marseille", 
     "Montpellier" = "Polytech Montpellier", 
@@ -208,28 +215,15 @@ Avenir <- subset(Avenir,FiliereDetaillee =="Bac Général" | FiliereDetaillee ==
 # View(Avenir)
 
 
-## Extraction des Polytech
+## Extraction des Polytech -----
 # Les Polytech 
 mesUAI <- c("0341143H","0492226D","0596610P","0754400A","0596610P","0631383L","0061661Y","0911986P","0754400A","0631383L","0540130Y","0492226D","0741510P","0382881A","0133682G","0341143H",
             "0442409E","0451638L","0371610Z","0693550J")
-Polytech <- subset(d,UAI %in% mesUAI)
+Polytech <- subset(d,UAI %in% mesUAI & Capacite >39)
 # en fait les doublons sont l'option bio ; il suffit de supprimer les moins de 50 places si je veux aller vite
+# j'ai vérifié pour 2022 ça fonctionne mais pas vérifié pour les autres années 
 
-# Angers : 94 + 32 places « BIO »
-# Annecy-Chambéry : 115
-# Clermont : 115 + 35 « BIO »
-# Grenoble : 135
-# Lille : 145 + 25 « BIO »
-# Lyon : 120
-# Marseille : 180
-# Montpellier : 180 + 25 « BIO »
-# Nancy : 144
-# Nantes : 144
-# Nice Sophia : 120
-# Orléans : 180
-# Paris-Saclay : 135
-# Sorbonne : 145 + 30 « BIO »
-# Tours : 150
+
 
 ## Extraction des MPSI -----
 mesUAI <- c("0940120V","0783053V","0690026D","0750655E","0750658H","0590119J","0753840S","0750654D","0782562L","0750699C")
@@ -346,7 +340,8 @@ ficIn$EtbShort <- ficIn$EtbShort %>%
     theme(legend.position = "bottom") + 
     geom_text(stat = "identity", position = position_fill(.5),
               colour = "white", fontface = "bold", size = 3.5) +
-    labs(x="",y="Distribution", fill = "",title="Répartition des admis par mention au bac", subtitle = paste0(ficName, " - session ", annee))
+    labs(x="",y="Distribution", fill = "",title="Répartition des admis par mention au bac", subtitle = paste0(ficName, " - session ", annee)) +
+           theme(axis.text.x = element_text(angle = 45, hjust = 1))
   
   
   ggsave(paste0(ficName, "_bars",annee,".png"),device = "png",
