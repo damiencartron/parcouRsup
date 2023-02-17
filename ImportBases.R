@@ -11,6 +11,12 @@ library(kableExtra)
 library(rmarkdown)
 library(markdown)
 
+# A FAIRE ----
+# -	Si tu veux appliquer le DRY/DRO principle (don’t repeat yourself, don’t repeat others), il faut inclure dans le code la commande qui va télécharger les données sur le site. 
+# download.file("https://data.enseignementsup-recherche.gouv.fr/api/explore/v2.1/catalog/datasets/fr-esr-parcoursup/exports/csv?lang=fr&timezone=Europe%2FBerlin&use_labels=true&delimiter=%3B", "chemin/nomQueTuDonnes.csv")
+
+
+
 #Import CSV ----
 ##Import Parcoursup 2022 ----
 fr_esr_parcoursup_2022 <- read_delim("fr-esr-parcoursup_2022.csv", 
@@ -334,7 +340,8 @@ ficIn$EtbShort <- ficIn$EtbShort %>%
     theme(legend.position = "bottom") + 
     geom_text(stat = "identity", position = position_fill(.5),
               colour = "white", fontface = "bold", size = 3.5) +
-    labs(x="",y="Distribution", fill = "",title="Répartition des admis par mention au bac", subtitle = paste0(ficName, " - session ", annee))
+    labs(x="",y="Distribution", fill = "",title="Répartition des admis par mention au bac", subtitle = paste0(ficName, " - session ", annee)) +
+           theme(axis.text.x = element_text(angle = 45, hjust = 1))
   
   
   ggsave(paste0(ficName, "_bars",annee,".png"),device = "png",
