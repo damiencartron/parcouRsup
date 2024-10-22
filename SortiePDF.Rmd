@@ -1,0 +1,291 @@
+---
+title: "Pistes formations parcoursup"
+#author: "Damien Cartron"
+lang: "fr"
+fontsize: 11pt
+geometry: a4paper,top=2cm,bottom=2cm,left=1.5cm,right=1.5cm
+output:
+  pdf_document:
+    keep_tex: yes
+    toc: true # table des matières 
+    toc_depth: 2  #niveaux de titres demandés 
+date: "`r format(Sys.time(),'%d %B,%Y')`" #data avec maj automatique
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+#Echo = TRUE permet de visualiser le code dans la sortie
+# message & warning = FALSE pour supprimer tous les messages de chargement de package ou d'infos diverses 
+```
+```{r, results="hide", include = FALSE}
+source("ImportBases.R", encoding = "UTF-8")
+ 
+
+NbChoix <-0
+NbSSChoix <-0
+NbChoixReel <-0 
+# ici j'importe toutes les bases dont je vais avoir besoin ; je coupe les sorties pour éviter le bruit sur la sortie
+```
+
+# Insa et Universités technologiques 
+```{r, fig.width=11.75, fig.height=8.25}
+
+graphfacet(InsaUT, "Insa & UT", 2023)
+NbChoix <- NbChoix +1
+NbChoixReel <- NbChoixReel + nrow(subset(InsaUT,Session=="2023"))
+```
+
+Où on voit que certes l'Insa Lyon est hyper sélective, mais que Toulouse, l'UTC sont jouables, que Rennes, Rouen, UTT et Nord sont très probables 
+
+```{r}
+extrait <- subset(InsaUT, select = c(EtbShort,Capacite, NbCandidats, LastCalled, NbClasse, TxAccess, LCvsCapacite), Session=="2022")
+extrait$TxClasse <- round((extrait$NbClasse / extrait$NbCandidats)*100,1)
+# head(extrait) %>%
+#   kable(format = "latex")
+extrait <- extrait %>%
+  arrange((TxAccess))
+
+kable((extrait))
+```
+
+Où on voit que même sur les filières avec moins de félicitations, les taux d'accès restent assez bas ; autour de 1 sur 6. Maintenant on n'a pas le niveau des postulants. 
+Les formations font le choix de classer (hormis Hu-Tech) énormément de candidats au cas où. Même l'UTC classe plus de la moitié de ses candidats. Autrement dit très peu de candidats sont éjectés dès l'alogoritme, mais beaucoup ne seront pas pris. 
+
+*So far : *
+* Nombre de choix parcoursup : `r NbChoix`
+* Nombre de sous-choix : `r NbSSChoix`
+* Nombre de formation réellement sélectionnées : `r NbChoixReel`
+
+# Les prépas MP2I
+## Vue d'ensemble 
+```{r, fig.width=11.75, fig.height=8.25}
+## extraction données MP2I ----
+MP2Is <- subset(MP2Is,UAI !="0690026D")
+# je supprime juste le lycée du Parc où ne postulera pas
+graphfacet(MP2Is, "MP2I", 2022)
+```
+
+Où on voit que LLG est proche d'intouchable. Que St Louis est plus probable que Hoche. Qu'ensuite Janson et Paul Valéry doivent être accessibles 
+```{r, fig.width=11.75, fig.height=8.25}
+extrait <- subset(MP2Is, select = c(EtbShort,Capacite, NbCandidats, LastCalled, NbClasse, TxAccess), Session=="2022")
+extrait$TxClasse <- round((extrait$NbClasse / extrait$NbCandidats)*100,1)
+# head(extrait) %>%
+#   kable(format = "latex")
+extrait <- extrait %>%
+  arrange((TxAccess)) #ici je trie par niveau de TxAccess ; pour inverser desc l'ordre de tri
+kable((extrait))
+
+# Calcul de l'évolution du tx de Mention TTB 
+EvolMention <- subset(MP2Is,select=c(EtbShort, Session, MentionTTB))
+EvolMention <- EvolMention %>% pivot_wider(names_from = Session, values_from = MentionTTB )
+EvolMention <- EvolMention %>% dplyr::rename(MentionTTB22 = '2022', MentionTTB21 = '2021')
+EvolMention$EvolTTB <- EvolMention$MentionTTB22-EvolMention$MentionTTB21
+EvolMention <- subset(EvolMention,select = c(EtbShort,MentionTTB21,MentionTTB22,EvolTTB))
+EvolMention <- EvolMention %>%arrange(desc(MentionTTB22))
+kable((EvolMention))
+NbChoix <- NbChoix +1
+NbSSChoix <- NbSSChoix + nrow(subset(MP2Is,Session=="2022"))
+NbChoixReel <- NbChoixReel + nrow(subset(MP2Is,Session=="2022"))
+```
+Où on voit que la progression n'est pas uniforme sur cette prépa qui n'a que deux années d'existence. L'évolution de LLG (+21points) et de St Louis (-10 points) sont vraiment étonnantes ; Hoche est également très forte (+8 points). 
+
+## Comparaison avec les MPSI 
+Pour mémoire ces même prépas en MPSI ont ce profil de mention TTB : 
+```{r, fig.width=11.75, fig.height=8.25}
+# Création d'une base MPSI comparable à MP2I 
+
+mesUAI <- c("0590119J",  "0750655E", "0750658H", "0750679F", "0750699C", "0753873C", "0782562L","0940120V","0783053V")
+MPSIs <- subset(MPSI,UAI %in% mesUAI)
+# Calcul de l'évolution du tx de Mention TTB 
+
+EvolMention <- subset(MPSIs,select=c(EtbShort, Session, MentionTTB))
+EvolMention <- EvolMention %>% pivot_wider(names_from = Session, values_from = MentionTTB )
+EvolMention <- EvolMention %>% dplyr::rename(MentionTTB22 = '2022', MentionTTB21 = '2021')
+EvolMention$EvolTTB <- EvolMention$MentionTTB22-EvolMention$MentionTTB21
+EvolMention <- subset(EvolMention,select = c(EtbShort,MentionTTB21,MentionTTB22,EvolTTB))
+EvolMention <- EvolMention %>%arrange(desc(MentionTTB22))
+kable((EvolMention))
+
+```
+Où on voit que Hoche monte en flèche pour les MPSI (faut dire qu'ils communiquent très bien et donnent envie d'y aller). LLG et Faidherbe ont une augmentation qu'il faudrait pouvoir comparer à l'évolution des mentions TTB 
+St Louis est aussi en désamour en MPSI. 
+On voit également que sauf pour LLG les taux actuels de félicitations du jury en MPSI sont très supérieurs à MP2I
+J'ai mis Marcelin Berthelot même s'ils n'ont pas de MP2I pour voir la difficulté qui semble jouable à 16% de TTB
+
+*So far : *
+* Nombre de choix parcoursup : `r NbChoix`
+* Nombre de sous-choix : `r NbSSChoix`
+* Nombre de formation réellement sélectionnées : `r NbChoixReel`
+
+# Concours Puissance Alpha
+```{r, fig.width=11.75, fig.height=8.25}
+PA <- PAlpha
+mesUAI <- c("0932019P","0870997L","0693623N","0951820M","0941934S","0132246A","0783720V","0941890U","0530939H","0831458J","0292125C","0442837V","0753559L","0142440B")
+# je n'ai gardé que les écoles avec de l'informatique
+PA <- subset(PA,UAI %in% mesUAI)
+#En fait j'ai un pb il faut faire des moyennes pondérées car pour les écoles privées il y a plusieurs lignes par Ecole ; probablement pour masquer les recours aux listes d'attente et seconds tours 
+
+
+# PAt <- subset(PA, Concours == "Concours Puissance Alpha - Formation d'ingénieur Bac + 5 - Bacs généraux" | 
+#                    Concours == "Concours Puissance Alpha - Formation d'ingénieur Bac + 5 - Bacs généraux - 2 Sciences" &
+#                    (Filiere == "Ecole d'Ingénieur" &
+#                       (FiliereDetaillee == "Bacs généraux" | FiliereDetaillee =="Bacs généraux - 2 Sciences") &
+#                       FiliereAgregee == "Ecole d'Ingénieur"))
+
+PAt <- subset(PA, Session == "2022",
+  select = c(EtbShort,NbMentionNo,NbMentionAB,NbMentionB,NbMentionTB,NbMentionTTB,NbCandidatCalcule))
+  
+write.xlsx(PAt,"Test PA.xlsx",colNames = TRUE)
+# PAt
+# PAt$tot <- sum(PAt$NbCandidatCalcule)
+PAt2 <- PAt
+PAt2$NbMentionNo <- sum(PAt$NbMentionNo)
+PAt2$NbMentionAB <- sum(PAt$NbMentionAB)
+PAt2$NbMentionB <- sum(PAt$NbMentionB)
+PAt2$NbMentionTB <- sum(PAt$NbMentionTB)
+PAt2$NbMentionTTB <- sum(PAt$NbMentionTTB)
+PAt2$NbCandidatCalcule <- sum(PAt$NbCandidatCalcule)
+# PAt2
+# il va falloir faire les sommes des colonnes par écoles et supprimer les doublons
+Pat3 <- PAt
+Pat3 <- Pat3 %>%
+  group_by(EtbShort) %>%
+  dplyr::summarize(sum(NbMentionNo),sum(NbMentionAB),sum(NbMentionB),sum(NbMentionTB),sum(NbMentionTTB),sum(NbCandidatCalcule))
+  
+# Pat3
+Pat3 <- Pat3 %>%
+  dplyr::rename(NbMentionNo = `sum(NbMentionNo)`,
+                NbMentionAB = `sum(NbMentionAB)`,
+                NbMentionB = `sum(NbMentionB)`,
+                NbMentionTB = `sum(NbMentionTB)`,
+                NbMentionTTB = `sum(NbMentionTTB)`,
+                NbCandidatCalcule = `sum(NbCandidatCalcule)`)
+# Pat3
+Pat3$MentionNo <- round(Pat3$NbMentionNo/Pat3$NbCandidatCalcule*100,0)
+Pat3$MentionAB <- round(Pat3$NbMentionAB/Pat3$NbCandidatCalcule*100,0)
+Pat3$MentionB <- round(Pat3$NbMentionB/Pat3$NbCandidatCalcule*100,0)
+Pat3$MentionTB <- round(Pat3$NbMentionTB/Pat3$NbCandidatCalcule*100,0)
+Pat3$MentionTTB <- round(Pat3$NbMentionTTB/Pat3$NbCandidatCalcule*100,0)
+Pat3$MentionTBTTB <- Pat3$MentionTB + Pat3$MentionTTB
+Pat3$Session <- 2022 
+
+Pat3$EtbShort <- Pat3$EtbShort %>%
+    fct_reorder2(Pat3$MentionB, Pat3$MentionTBTTB, .desc = TRUE)
+
+histo <- Pat3
+#graphique Barre empilées 
+
+
+histo <- subset(histo, select = c(EtbShort,Session,MentionNo,MentionAB,MentionB,MentionTB, MentionTTB))
+histo <- pivot_longer(histo, c(MentionNo,MentionAB,MentionB,MentionTB,MentionTTB))
+histo <- histo %>% dplyr::rename(Mention = name,  Repartition =value)
+
+histo$Mention <- fct_relevel(histo$Mention, "MentionNo", "MentionAB", "MentionB", "MentionTB", "MentionTTB")
+histo$Mentionlab <- histo$Mention %>%
+  fct_recode("Sans" = "MentionNo",
+             "AB" = "MentionAB",
+             "B" = "MentionB",
+             "TB" = "MentionTB",
+             "Félic" = "MentionTTB")
+
+
+
+f <- function(x) {
+  res <- scales::percent(x, accuracy = 1)
+  res[x < .01] <- ""
+  res
+}
+mesbarres <- ggplot(histo)+
+  aes(x = EtbShort, y = Repartition, fill = Mention, label = f(Repartition/100)) +
+  geom_bar(stat = "identity", position = "fill") +
+  theme(legend.position = "bottom") + 
+  geom_text(stat = "identity", position = position_fill(.5),
+            colour = "white", fontface = "bold", size = 3.5) +
+  labs(x="",y="Distribution", fill = "",title="Répartition des admis par mention au bac", subtitle = "session 2022") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+mesbarres
+ggsave("PuissanceAlpha_bars_2022.png",device = "png",
+       height =  8.25, width = 11.75)
+
+NbChoix <- NbChoix +1
+NbSSChoix <- NbSSChoix + 0
+NbChoixReel <- NbChoixReel + nrow(subset(Pat3,Session=="2022"))
+
+```
+J'ai été obligé de calculer des moyennes pondérées pour les mentions car pour une raison que j'ignore mais qui semble liée à une dissimulation de la phase complémentaire j'ai dû recalculer les moyennes pondérées des mentions au bac de la plupart des écoles qui avaient trois voire quatre lignes pour le même concours. 
+Au final les meilleures des écoles de Puissance Alpha (en ayant conservé que les écoles avec numérique) sont :
+
+* CPE Lyon (pas classé étudiant !)
+* ESIEA Laval (60/111)
+* EFREI Paris (62/111)
+* EBI (44/111)
+* ISEN Nantes, Brest  (52/111) ou Méditérrannée (29/111)
+* ISEP Paris (58/111)
+* et enfin ESSIEE (9% seulement de TB ; 46% de bien mais au final très bien classé étudiant : 65/111)
+* on pourrait voir si on descend jusqu'à 3IL (mais Limoges et très mal classé par l'étudiant 41/111)
+
+```{r}
+extrait <- subset(PA, select = c(EtbShort,Capacite, NbCandidats, LastCalled, NbClasse, TxAccess, LCvsCapacite), Session=="2022")
+extrait$TxClasse <- round((extrait$NbClasse / extrait$NbCandidats)*100,1)
+# head(extrait) %>%
+#   kable(format = "latex")
+extrait <- extrait %>%
+  arrange((TxAccess))
+
+kable((extrait))
+```
+
+*So far : *
+* Nombre de choix parcoursup : `r NbChoix`
+* Nombre de sous-choix : `r NbSSChoix`
+* Nombre de formation réellement sélectionnées : `r NbChoixReel`
+
+# Les Polytech 
+*Attention, j'ai arbitrairement supprimé les formations Polytechs qui ont moins de 40 étudiants car ce sont, pour 2022 au moins (pas vérifié les autres années), des formations spécifiques Bio (mais qui portent le même nom que la formation normale et on ne peut pas les repérer sinon). Il est possible qu'en fait j'ai surinterprété puissance Alpha et que ce soit un problème du même genre (mais là c'était clairement deux lignes pour qqs polytech seulement du type Anger, Clermont et Sorbonne)*
+```{r}
+graphfacet(Polytech, "Polytech", 2022)
+NbChoix <- NbChoix +1
+NbSSChoix <- NbSSChoix + 0
+NbChoixReel <- NbChoixReel + nrow(subset(Polytech,Session=="2022"))
+```
+Où on voit qu'en fait les polytechs ont plutôt un niveau de recrutement supérieur à celui de Puissance Alpha (sans doute un effet de la gratuité des études). Ils ont certes bcp moins de mentions TTB que l'Insa ou les MP2I mais peuvent être en fait l'entre deux que je cherche depuis un moment entre Puissance Alpha et l'Insa ou l'UTC. Grenoble est un peu en dessous (mais en fait pas très loin de Saclay) et dans une ville universitaire dynamique ; donc ça vaut le coup de regarder leur maquette. 
+Les Polytechs de Lille, Sorbonne, Nice, Saclay (limite) et Lyon ont plus de 50% de memntion très bien et quasiment pas de mention AB dans leurs élèves. Il faut regarder leur site web pour voir le contenu de la formation et s'inscrire au concours. Essayer de trouver des JPO mais c'est un peu tard. 
+
+```{r}
+extrait <- subset(Polytech, select = c(EtbShort,Capacite, NbCandidats, LastCalled, NbClasse, TxAccess, LCvsCapacite), Session=="2022")
+extrait$TxClasse <- round((extrait$NbClasse / extrait$NbCandidats)*100,1)
+# head(extrait) %>%
+#   kable(format = "latex")
+extrait <- extrait %>%
+  arrange((TxAccess))
+
+kable((extrait))
+```
+
+*So far : *
+* Nombre de choix parcoursup : `r NbChoix`
+* Nombre de sous-choix : `r NbSSChoix`
+* Nombre de formation réellement sélectionnées : `r NbChoixReel`
+
+# Les Prépas Ecoles de commerce 
+```{r}
+graphfacet(HEC, "Prépas commerce", 2022)
+NbChoix <- NbChoix +1
+NbSSChoix <- NbSSChoix + 0
+NbChoixReel <- NbChoixReel + nrow(subset(HEC,Session=="2022"))
+```
+
+Où on voit qu'il peut avoir ses chances à H4 appliqué ou Stan, H4 approfondi risque d'être compliqué ; Lakanal semble atteignable. 
+
+*So far : *
+* Nombre de choix parcoursup : `r NbChoix`
+* Nombre de sous-choix : `r NbSSChoix`
+* Nombre de formation réellement sélectionnées : `r NbChoixReel`
+
+# Les filières universitaires  
+```{r}
+graphfacet(Univ, "Universités", 2022)
+NbChoix <- NbChoix +1
+NbSSChoix <- NbSSChoix + 0
+NbChoixReel <- NbChoixReel + nrow(subset(Univ,Session=="2022"))
+``` 
