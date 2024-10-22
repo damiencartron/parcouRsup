@@ -1,0 +1,57 @@
+---
+title: "Traitements commentés"
+output: html_document: df_print:kable
+date: "2022-12-27"
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+graphfacet(InsaUT, "Insa & UT", 2022)
+```
+```{r}
+library(knitr)
+library(kableExtra)
+extrait <- subset(InsaUT, select = c(Etablissement,Capacite, NbCandidats,LastCalled,TxAccess),Session=="2022")
+# head(extrait) %>%
+#   kable(format = "latex")
+head(extrait)
+
+```
+
+
+
+```{r}
+extrait <- extrait %>%
+  arrange((TxAccess))
+head(extrait)
+
+extrait2 <- as.data.frame.matrix(extrait)
+head(extrait2)
+kable(extrait, caption = "Mon test")
+```
+
+
+```{r}
+kable(extrait[1:4,], caption = "mon test")
+kable(extrait, caption = "Mon test")
+summary(extrait)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
