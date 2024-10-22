@@ -18,6 +18,12 @@ library(markdown)
 
 
 #Import CSV ----
+##Import Parcoursup 2023 ----
+fr_esr_parcoursup_2023 <- read_delim("fr-esr-parcoursup_2023.csv", 
+                                     delim = ";", escape_double = FALSE, trim_ws = TRUE)
+
+d23<- fr_esr_parcoursup_2023
+
 ##Import Parcoursup 2022 ----
 fr_esr_parcoursup_2022 <- read_delim("fr-esr-parcoursup_2022.csv", 
                                      delim = ";", escape_double = FALSE, trim_ws = TRUE)
@@ -50,8 +56,8 @@ fr_esr_parcoursup_2018 <- read_delim("fr-esr-parcoursup-2018.csv",
                                      delim = ";", escape_double = FALSE, trim_ws = TRUE)
 d18 <- fr_esr_parcoursup_2018
 
-## fusiion des bases -----
-d<-bind_rows(d22,d21,d20)
+## fusion des bases -----
+d<-bind_rows(d23,d22,d21,d20)
 
 ## recodages ----
 d$UAI <- d$`Code UAI de l'établissement`
@@ -85,7 +91,7 @@ d$NbCandidats <- d$`Effectif total des candidats pour une formation`
 d$NbClasse <- d$`Effectif total des candidats classés par l’établissement en phase principale`
 d$LastCalled <-d$`Effectif total des candidats ayant reçu une proposition d’admission de la part de l’établissement`
 d$TailleLC <- d$LastCalled - d$Capacite
-d$LCvsCapacite <- round(d$TailleLC / d$Capacite, 1)
+d$LCvsCapacite <- round((d$TailleLC / d$Capacite)+1, 1)
 d$TxAccess <- round(d$LastCalled / d$NbCandidats,3)*100
 
 
@@ -146,8 +152,14 @@ d$EtbShort <- d$Etablissement %>% #juste des noms courts pour les graphiques et 
     "Nantes" = "Polytech Nantes", 
     "Orléans" = "Polytech Orléans", 
     "Tours" = "Polytech Tours", 
-    "Lyon" = "Polytech Lyon" 
-      )
+    "Lyon" = "Polytech Lyon", 
+    "Stan" = "Lycée Stanislas", 
+    "St J Passy" = "Lycée Saint Jean de Passy",
+    "Michelet" = "Lycée Michelet",
+    "Ginette" = "Lycée Sainte Geneviève",
+    "Paris Cité" = "Université de Paris",
+    "UMLV" = "Université Gustave Eiffel"
+    )
 
 
 dep <- d 
@@ -226,7 +238,7 @@ Polytech <- subset(d,UAI %in% mesUAI & Capacite >39)
 
 
 ## Extraction des MPSI -----
-mesUAI <- c("0940120V","0783053V","0690026D","0750655E","0750658H","0590119J","0753840S","0750654D","0782562L","0750699C")
+mesUAI <- c("0940120V","0783053V","0690026D","0750655E","0750658H","0590119J","0753840S","0750654D","0782562L","0750699C","0783053V")
 MPSI <- subset(d,UAI %in% mesUAI & Filierebis =="MPSI")
 
 ## Extraction des Prépa littéraires AL -----
@@ -235,10 +247,38 @@ mesUAI <- c("0690027E","0210015C","0920145H","0940120V","0350710G","0590119J","0
 AL <- subset(d,UAI %in% mesUAI & Filierebis =="Lettres")
 # View(AL)
 
+## Extraction des HEC  -----
+d2<-d
+d<-d2
+d$UAI[d$UAI =="0750654D" & d$Filierebis =="ECG - Mathématiques appliquées + HGG"] <- "0750654Dapplik"
+
+d$EtbShort[d$UAI =="0750654Dapplik"] <- factor(d,"H4Applik")
+
+d$Filierebis[d$UAI =="0750654Dapplik" & d$Filierebis =="ECG - Mathématiques appliquées + HGG"] <- "ECG - Mathématiques approfondies + HGG"
+mesUAI <- c("0750654D","0750654Dapplik","0753947H","0920145H","0920149M","0753840S","0783053V")
+#d$EtbShort[d$EtbShort == "H4" & d$UAI=="0750654Dapplik"] <- "H4 Appliqué"
+HEC <- subset(d,UAI %in% mesUAI & Filierebis =="ECG - Mathématiques approfondies + HGG")
+
+HEC$EtbShort <- fct_explicit_na(HEC$EtbShort, na_level = "H4 Appliqué")
+# bon c'est dégueu mais jamais réussi à renommer le facteur directement 
+# bon faudrait faire comme pour universités 
+
+## Extractions des Universités -----
+Univ <- subset(d, Concours == "Université de Paris - Licence - Informatique - Parcours Informatique Générale - Campus Grands Moulins" |
+                  Concours == "Université de Paris - Double licence - Mathématiques / Informatique - Double licence Mathématiques Informatique - Campus Grands Moulins" |
+                  Concours == "Université Gustave Eiffel - Licence - Portail INFORMATIQUE,  MATHEMATIQUES, INGENIERIE MATHEMATIQUE ET INFORMATIQUE")
+
+#j'avais comme poru HEC plein de pb poru recoder EtbShort ; même Marie n'y arrivait pas ; elle a fini par avoir l'idée de repasser en caractère EtbShor puis en factor pour mes grpahqiues
+Univ$EtbShort <- as.character(Univ$EtbShort)
+Univ$EtbShort <- ifelse(Univ$Filierebis=="Mathématiques",
+       "Paris-Cité DL",
+       Univ$EtbShort) 
+Univ$EtbShort <- as.factor(Univ$EtbShort)
+
 
 # Export dans des onglets excel -----
 Tout <- bind_rows(InsaUT, MP2Is,EInge,PAlpha,Avenir,MPSI,AL)
-Selec <- bind_rows(InsaUT,MP2Is,EInge)
+Selec <- bind_rows(InsaUT,MP2Is,EInge,Univ)
 l <- list("Tout" = Tout, "InsaUT" = InsaUT, "MP2Is" = MP2Is, "EInge" = EInge, "PAlpha" = PAlpha, "MPSI" = MPSI, "AL" = AL, "Selection" = Selec) 
 write.xlsx(l,"ExportTot.xlsx",firstRow = TRUE, firstActiveCol  = 1)
 
@@ -250,6 +290,7 @@ graphfacet <- function(ficIn, ficName, annee) {
 
 ## Ecriture des fichiers excel de sortie ----
 write.xlsx(ficIn,paste0(ficName, ".xlsx"),colNames = TRUE)
+write.xlsx(subset(ficIn,Session==2023),paste0(ficName, "_2023.xlsx"),colNames = TRUE)
 write.xlsx(subset(ficIn,Session==2022),paste0(ficName, "_2022.xlsx"),colNames = TRUE)
 write.xlsx(subset(ficIn,Session==2021),paste0(ficName, "_2021.xlsx"),colNames = TRUE)
 write.xlsx(subset(ficIn,Session==2020),paste0(ficName, "_2020.xlsx"),colNames = TRUE)
@@ -289,6 +330,7 @@ montxaccess
 ggsave(paste0(ficName, "_TxAccess.png"),device = "png",
        height =  8.25, width = 11.75)
 ## Subset année et tri de la base ----
+ficInOrign <- ficIn
 ficIn <- subset(ficIn, Session == annee)
   
 ficIn$EtbShort <- ficIn$EtbShort %>%
@@ -297,6 +339,16 @@ ficIn$EtbShort <- ficIn$EtbShort %>%
 ficIn$EtbShort <- ficIn$EtbShort %>%
     fct_reorder(ficIn$MentionTTB, .desc = TRUE)
   levels(ficIn$EtbShort)
+
+###  subset last year
+  ficInLY <- subset(ficInOrign, Session == annee-1)
+  
+  ficInLY$EtbShort <- ficInLY$EtbShort %>%
+    fct_reorder2(ficInLY$MentionTTB, ficInLY$MentionTB, .desc = TRUE)
+  
+  ficInLY$EtbShort <- ficInLY$EtbShort %>%
+    fct_reorder(ficInLY$MentionTTB, .desc = TRUE)
+  levels(ficInLY$EtbShort)
   
   
   # l <- list( "Tout" = ficName, paste0(ficName, "_2021") = subset(ficIn,Session==2021), paste0(ficName, "_2020") = subset(ficIn,Session==2020)) 
@@ -333,7 +385,7 @@ ficIn$EtbShort <- ficIn$EtbShort %>%
     res
   }
   
-  #graphique Barre empilées 
+  ##graphique Barre empilées ----
   mesbarres <- ggplot(histo)+
     aes(x = EtbShort, y = Repartition, fill = Mention, label = f(Repartition/100)) +
     geom_bar(stat = "identity", position = "fill") +
@@ -347,8 +399,33 @@ ficIn$EtbShort <- ficIn$EtbShort %>%
   ggsave(paste0(ficName, "_bars",annee,".png"),device = "png",
          height =  8.25, width = 11.75)
   
+  ##graphique Barre empilées n-1  ----
+  histo <- subset(ficInLY, select = c(EtbShort,Session,MentionNo,MentionAB,MentionB,MentionTB, MentionTTB))
+  histo <- pivot_longer(histo, c(MentionNo,MentionAB,MentionB,MentionTB,MentionTTB))
+  histo <- histo %>% dplyr::rename(Mention = name,  Repartition =value)
   
-  maliste <- list(monratio,montxaccess,mongraph,mesbarres)
+  histo$Mention <- fct_relevel(histo$Mention, "MentionNo", "MentionAB", "MentionB", "MentionTB", "MentionTTB")
+  histo$Mentionlab <- histo$Mention %>%
+    fct_recode("Sans" = "MentionNo",
+               "AB" = "MentionAB",
+               "B" = "MentionB",
+               "TB" = "MentionTB",
+               "Félic" = "MentionTTB")  
+  
+  mesbarresLY <- ggplot(histo)+
+    aes(x = EtbShort, y = Repartition, fill = Mention, label = f(Repartition/100)) +
+    geom_bar(stat = "identity", position = "fill") +
+    theme(legend.position = "bottom") + 
+    geom_text(stat = "identity", position = position_fill(.5),
+              colour = "white", fontface = "bold", size = 3.5) +
+    labs(x="",y="Distribution", fill = "",title="Répartition des admis par mention au bac", subtitle = paste0(ficName, " - session ", annee-1)) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+  
+  ggsave(paste0(ficName, "_bars",annee-1,".png"),device = "png",
+         height =  8.25, width = 11.75)
+  
+  maliste <- list(monratio,montxaccess,mongraph,mesbarres,mesbarresLY)
   return(maliste)
 }
 
