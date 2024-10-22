@@ -8,7 +8,7 @@ library(questionr)
 library(forcats)
 library(knitr)
 library(kableExtra)
-library(rmarkdown)
+library(rmarkdown) 
 library(markdown)
 
 # A FAIRE ----
